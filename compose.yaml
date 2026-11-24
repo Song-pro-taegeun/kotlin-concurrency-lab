@@ -1,0 +1,25 @@
+services:
+  mariadb:
+    image: mariadb:11.4.13
+    container_name: kotlin-concurrency-lab-mariadb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${DB_PORT:-3308}:3306"
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-kotlin_concurrency_lab}
+      MARIADB_USER: ${DB_USERNAME:-kotlin}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-kotlin}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      TZ: Asia/Seoul
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mariadb-data:
+    name: kotlin-concurrency-lab-mariadb-data
