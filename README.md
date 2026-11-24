@@ -26,12 +26,36 @@ docker compose up -d mariadb
 
 | 구분 | 주소 |
 | --- | --- |
-| API 상태 확인 | http://localhost:8080/api/v1/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | OpenAPI JSON | http://localhost:8080/v3/api-docs |
 | MariaDB | localhost:3308 |
 
 환경 변수를 변경하려면 `.env.example`을 `.env`로 복사한 뒤 값을 수정합니다. `.env`는 Git에 포함되지 않습니다.
+
+현재 학습 단계에서는 `spring.jpa.hibernate.ddl-auto=create`를 사용합니다. 애플리케이션을 다시 실행할 때마다 기존 테이블과 데이터가 초기화됩니다.
+
+## 동기 Blocking 기준 API
+
+비교에 사용할 샘플 상품을 먼저 등록합니다.
+
+```bash
+curl -X POST http://localhost:8080/api/v1/products \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "한정판 키보드",
+    "price": 150000,
+    "stockQuantity": 100,
+    "deliveryLeadTimeDays": 2
+  }'
+```
+
+응답의 상품 ID로 동기 API를 호출합니다.
+
+```bash
+curl http://localhost:8080/api/v1/order-summaries/blocking/1
+```
+
+상품, 재고, 배송 정보를 각각 순차 조회하며 각 작업은 500ms의 Blocking I/O를 모사합니다. 따라서 워밍업 이후 기준 응답 시간은 약 1.5초입니다. 지연 시간은 `lab.blocking-delay` 설정으로 조정할 수 있습니다.
 
 ## Virtual Thread 프로필
 
