@@ -57,6 +57,16 @@ curl http://localhost:8080/api/v1/order-summaries/blocking/1
 
 상품, 재고, 배송 정보를 각각 순차 조회하며 각 작업은 500ms의 Blocking I/O를 모사합니다. 따라서 워밍업 이후 기준 응답 시간은 약 1.5초입니다. 지연 시간은 `lab.blocking-delay` 설정으로 조정할 수 있습니다.
 
+## Coroutine API
+
+동일한 상품, 재고, 배송 정보를 Coroutine으로 동시에 조회합니다.
+
+```bash
+curl http://localhost:8080/api/v1/order-summaries/coroutine/1
+```
+
+JPA/JDBC와 `Thread.sleep()`은 Blocking 작업이므로 각 조회를 `Dispatchers.IO`에서 실행합니다. 세 작업이 동시에 실행되어 워밍업 이후 기준 응답 시간은 약 500ms입니다. Coroutine을 사용해도 JPA/JDBC 자체가 Non-blocking으로 바뀌는 것은 아닙니다.
+
 ## Virtual Thread 프로필
 
 기본 프로필은 플랫폼 스레드를 사용합니다. Virtual Thread를 활성화하려면 다음과 같이 실행합니다.

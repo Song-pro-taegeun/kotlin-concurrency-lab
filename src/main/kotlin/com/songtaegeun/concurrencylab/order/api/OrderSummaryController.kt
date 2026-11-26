@@ -1,7 +1,9 @@
 package com.songtaegeun.concurrencylab.order.api
 
 import com.songtaegeun.concurrencylab.order.application.BlockingOrderSummaryService
+import com.songtaegeun.concurrencylab.order.application.CoroutineOrderSummaryService
 import com.songtaegeun.concurrencylab.order.dto.BlockingOrderSummaryResponse
+import com.songtaegeun.concurrencylab.order.dto.CoroutineOrderSummaryResponse
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/order-summaries")
 class OrderSummaryController(
     private val blockingOrderSummaryService: BlockingOrderSummaryService,
+    private val coroutineOrderSummaryService: CoroutineOrderSummaryService,
 ) {
     @Operation(
         summary = "동기 방식 주문 요약 조회",
@@ -21,4 +24,13 @@ class OrderSummaryController(
     fun getBlockingOrderSummary(
         @PathVariable productId: Long,
     ): BlockingOrderSummaryResponse = blockingOrderSummaryService.get(productId)
+
+    @Operation(
+        summary = "코루틴 방식 주문 요약 조회",
+        description = "Blocking JPA/JDBC 조회를 Dispatchers.IO에서 코루틴으로 동시에 실행하는 API",
+    )
+    @GetMapping("/coroutine/{productId}")
+    suspend fun getCoroutineOrderSummary(
+        @PathVariable productId: Long,
+    ): CoroutineOrderSummaryResponse = coroutineOrderSummaryService.get(productId)
 }
