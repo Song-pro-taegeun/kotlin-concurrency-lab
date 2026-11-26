@@ -67,6 +67,24 @@ curl http://localhost:8080/api/v1/order-summaries/coroutine/1
 
 JPA/JDBC와 `Thread.sleep()`은 Blocking 작업이므로 각 조회를 `Dispatchers.IO`에서 실행합니다. 세 작업이 동시에 실행되어 워밍업 이후 기준 응답 시간은 약 500ms입니다. Coroutine을 사용해도 JPA/JDBC 자체가 Non-blocking으로 바뀌는 것은 아닙니다.
 
+## Virtual Thread API
+
+동일한 Blocking 조회를 작업마다 생성한 Virtual Thread에서 동시에 실행합니다.
+
+```bash
+curl http://localhost:8080/api/v1/order-summaries/virtual-thread/1
+```
+
+Controller는 `CompletableFuture`를 반환하므로 Spring MVC 요청 스레드는 결과를 기다리며 점유되지 않습니다. 상품, 재고, 배송 조회는 이름이 `order-summary-vt-`로 시작하는 별도 Virtual Thread에서 실행되며, 워밍업 이후 기준 응답 시간은 약 500ms입니다.
+
+비교용 ForkJoinPool API는 다음과 같이 호출합니다.
+
+```bash
+curl http://localhost:8080/api/v1/order-summaries/fork-join/1
+```
+
+`OrderSummaryThreadComparisonTest`는 두 실행 방식을 각각 10개 동시 요청으로 실행하고 전체 완료 시간과 사용된 스레드 이름을 출력합니다.
+
 ## Virtual Thread 프로필
 
 기본 프로필은 플랫폼 스레드를 사용합니다. Virtual Thread를 활성화하려면 다음과 같이 실행합니다.
@@ -75,4 +93,4 @@ JPA/JDBC와 `Thread.sleep()`은 Blocking 작업이므로 각 조회를 `Dispatch
 ./gradlew bootRun --args='--spring.profiles.active=virtual'
 ```
 
-두 실행 방식에서 동일한 API의 처리량, 지연 시간, 스레드 수를 비교할 예정입니다.
+Virtual Thread API는 활성 프로필과 관계없이 자체 Virtual Thread 실행기를 사용합니다. `virtual` 프로필은 Spring MVC를 포함한 애플리케이션 전체의 Blocking 작업을 Virtual Thread 기반으로 비교할 때 사용합니다.
